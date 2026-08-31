@@ -44,7 +44,7 @@ const LAT_MIN = 20.52;
 const LAT_MAX = 26.60;
 
 // Keep real-world proportions: longitude degrees are shorter at ~24N.
-const X_SCALE = 0.62;
+const X_SCALE = 0.74;
 const X_OFFSET = (100 - 100 * X_SCALE) / 2;
 
 const projX = (lon: number) => X_OFFSET + ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * 100 * X_SCALE;
