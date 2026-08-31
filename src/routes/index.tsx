@@ -213,7 +213,7 @@ function Game() {
           }`}
           style={{ boxShadow: "var(--shadow-card)" }}
         >
-          <svg viewBox="0 0 100 100" className="map-glow absolute inset-0 h-full w-full p-3">
+          <svg viewBox="-7 -7 114 114" className="map-glow absolute inset-0 h-full w-full">
             <defs>
               <linearGradient id="bdFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="oklch(0.93 0.06 150)" />
@@ -277,7 +277,7 @@ function Game() {
                       top: `${h.y}%`,
                       width: size * 0.78,
                       height: size * 0.78,
-                      transform: "translate(-50%, -62%)",
+                      transform: "translate(-50%, -72%)",
                       fontSize: size * 0.38,
                     }}
                   >
@@ -298,7 +298,7 @@ function Game() {
                   top: `${HOLES[tukuHole]!.y}%`,
                   width: size,
                   height: size,
-                  transform: "translate(-50%, -62%)",
+                  transform: "translate(-50%, -72%)",
                   fontSize: size * 0.5,
                 }}
               >

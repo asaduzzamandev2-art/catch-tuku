@@ -216,7 +216,7 @@
     opacity: 0.2;
   }
   to {
-    transform: translate(-50%, -62%) scale(1);
+    transform: translate(-50%, -72%) scale(1);
     opacity: 1;
   }
 }
