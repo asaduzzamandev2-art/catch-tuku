@@ -38,6 +38,13 @@ function label(sec: number) {
   return "২ মিনিট";
 }
 
+// The SVG (viewBox -7..107) renders as a centred square inside the 4:5 board,
+// so overlay coordinates need the same mapping.
+const VB_MIN = -7;
+const VB_SIZE = 114;
+const mapX = (x: number) => ((x - VB_MIN) / VB_SIZE) * 100;
+const mapY = (y: number) => 10 + ((y - VB_MIN) / VB_SIZE) * 80;
+
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
@@ -154,7 +161,7 @@ function Game() {
     if (phase !== "playing") return;
     const spot = HOLES[tukuHole]!;
     if (hidden) {
-      registerMiss(spot.x, spot.y);
+      registerMiss(mapX(spot.x), mapY(spot.y));
       return;
     }
     caughtRef.current += 1;
@@ -164,7 +171,7 @@ function Game() {
       setBest((b) => Math.max(b, ns));
       return ns;
     });
-    addFloater(spot.x, spot.y, pick(CATCH_MESSAGES), true);
+    addFloater(mapX(spot.x), mapY(spot.y), pick(CATCH_MESSAGES), true);
     hop();
   };
 
@@ -250,8 +257,8 @@ function Game() {
               key={h.id}
               className="pointer-events-none absolute"
               style={{
-                left: `${h.x}%`,
-                top: `${h.y}%`,
+                left: `${mapX(h.x)}%`,
+                top: `${mapY(h.y)}%`,
                 width: 46,
                 height: 21,
                 transform: "translate(-50%, -50%)",
@@ -269,12 +276,12 @@ function Game() {
                 return (
                   <button
                     key={id}
-                    onClick={(e) => onDecoy(e, h.x, h.y)}
+                    onClick={(e) => onDecoy(e, mapX(h.x), mapY(h.y))}
                     aria-label="নিভে যাওয়া বাল্ব"
                     className="anim-rise absolute grid place-items-center rounded-full border border-border bg-muted opacity-80"
                     style={{
-                      left: `${h.x}%`,
-                      top: `${h.y}%`,
+                      left: `${mapX(h.x)}%`,
+                      top: `${mapY(h.y)}%`,
                       width: size * 0.78,
                       height: size * 0.78,
                       transform: "translate(-50%, -72%)",
@@ -294,8 +301,8 @@ function Game() {
                   hidden ? "opacity-20" : "anim-flicker"
                 }`}
                 style={{
-                  left: `${HOLES[tukuHole]!.x}%`,
-                  top: `${HOLES[tukuHole]!.y}%`,
+                  left: `${mapX(HOLES[tukuHole]!.x)}%`,
+                  top: `${mapY(HOLES[tukuHole]!.y)}%`,
                   width: size,
                   height: size,
                   transform: "translate(-50%, -72%)",
