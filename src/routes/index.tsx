@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BD_CITIES, BD_PATH, HOLES } from "@/lib/bd-map";
-import { CATCH_MESSAGES, MISS_MESSAGES, rank, toBn } from "@/lib/game-text";
+import { ALL_POEMS, CARD_POEMS, CATCH_MESSAGES, MISS_MESSAGES, OUTAGE_POEMS, rank, toBn } from "@/lib/game-text";
+import type { Poem } from "@/lib/game-text";
 
 const TITLE = "টুকু আসে টুকু যায়, কতক্ষণ থাকে বোঝা মুশকিল";
 
@@ -187,6 +188,12 @@ function Game() {
     registerMiss(((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100);
   };
 
+  const [poemIdx, setPoemIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setPoemIdx((i) => i + 1), 7000);
+    return () => clearInterval(id);
+  }, []);
+
   const taps = caught + missed;
   const accuracy = taps ? Math.round((caught / taps) * 100) : 0;
   const megawatt = caught * 12;
@@ -347,7 +354,8 @@ function Game() {
                   </button>
                 ))}
               </div>
-              <p className="mt-4 text-xs text-muted-foreground">
+              <PoemBox poem={OUTAGE_POEMS[poemIdx % OUTAGE_POEMS.length]!} />
+              <p className="mt-3 text-xs text-muted-foreground">
                 মোমবাতিতে চাপ দিলে মিস — কিন্তু ভয় নেই, পয়েন্ট কাটা যাবে না।
               </p>
             </Overlay>
@@ -366,7 +374,8 @@ function Game() {
                 <Stat label="উৎপাদন" value={`${toBn(megawatt)} MW`} />
                 <Stat label="সময়" value={label(duration)} />
               </div>
-              <div className="mt-4 grid w-full gap-2">
+              <PoemBox poem={CARD_POEMS[poemIdx % CARD_POEMS.length]!} />
+              <div className="mt-3 grid w-full gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -399,8 +408,13 @@ function Game() {
             </div>
           ) : (
             phase === "playing" && (
-              <div className="rounded-xl border border-dashed border-border px-3 py-2 text-center text-sm text-muted-foreground">
-                স্ট্রিক: {toBn(streak)} ⚡ | জ্বলজ্বলে বাল্বটাই টুকু
+              <div className="rounded-xl border border-dashed border-border px-3 py-2 text-center">
+                <p className="text-xs text-muted-foreground">স্ট্রিক: {toBn(streak)} ⚡ | জ্বলজ্বলে বাল্বটাই টুকু</p>
+                <p className="mt-1 text-sm font-medium leading-relaxed text-foreground">
+                  {ALL_POEMS[poemIdx % ALL_POEMS.length]!.a}
+                  <br />
+                  {ALL_POEMS[poemIdx % ALL_POEMS.length]!.b}
+                </p>
               </div>
             )
           )}
@@ -411,6 +425,19 @@ function Game() {
         </footer>
       </div>
     </main>
+  );
+}
+
+function PoemBox({ poem }: { poem: Poem }) {
+  return (
+    <div className="mt-4 w-full rounded-xl border border-border bg-secondary/50 px-3 py-3 text-center">
+      <p className="text-[10px] font-semibold tracking-widest text-accent">{poem.tag} ⚡</p>
+      <p className="mt-1 text-sm font-medium leading-relaxed text-foreground">
+        {poem.a}
+        <br />
+        {poem.b}
+      </p>
+    </div>
   );
 }
 
