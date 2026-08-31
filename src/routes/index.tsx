@@ -1,22 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { BD_CITIES, BD_PATH, randomSpot } from "@/lib/bd-map";
+import { BD_CITIES, BD_PATH, HOLES } from "@/lib/bd-map";
 import { CATCH_MESSAGES, MISS_MESSAGES, rank, toBn } from "@/lib/game-text";
+
+const TITLE = "টুকু আসে টুকু যায়, কতক্ষণ থাকে বোঝা মুশকিল";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "টুকু ধরো — বাংলাদেশের বিদ্যুৎ প্যারোডি গেম" },
+      { title: "টুকু আসে টুকু যায় — বিদ্যুৎ প্যারোডি গেম" },
       {
         name: "description",
         content:
-          "লোডশেডিং নিয়ে মজার প্যারোডি গেম। বাংলাদেশের মানচিত্রে লুকিয়ে থাকা টুকুকে ধরুন, বিদ্যুৎ ফিরিয়ে আনুন।",
+          "লোডশেডিং নিয়ে মজার প্যারোডি গেম। বাংলাদেশের মানচিত্রের গর্ত থেকে উঁকি দেওয়া টুকুকে ধরুন, বিদ্যুৎ ফিরিয়ে আনুন।",
       },
-      { property: "og:title", content: "টুকু ধরো — বিদ্যুৎ প্যারোডি গেম" },
+      { property: "og:title", content: "টুকু আসে টুকু যায় — বিদ্যুৎ প্যারোডি গেম" },
       {
         property: "og:description",
-        content: "৩০ সেকেন্ড, ১ মিনিট বা ২ মিনিট — বাংলাদেশের মানচিত্রে টুকু ধরার চ্যালেঞ্জ।",
+        content: "৩০ সেকেন্ড, ১ মিনিট বা ২ মিনিট — গর্ত থেকে উঁকি দেওয়া টুকু ধরার চ্যালেঞ্জ।",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -27,7 +29,6 @@ export const Route = createFileRoute("/")({
 
 type Phase = "menu" | "playing" | "over";
 type Floater = { id: number; x: number; y: number; text: string; good: boolean };
-type Decoy = { id: number; x: number; y: number };
 
 const DURATIONS = [30, 60, 120];
 
@@ -35,6 +36,10 @@ function label(sec: number) {
   if (sec === 30) return "৩০ সেকেন্ড";
   if (sec === 60) return "১ মিনিট";
   return "২ মিনিট";
+}
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
 function Game() {
@@ -45,8 +50,8 @@ function Game() {
   const [missed, setMissed] = useState(0);
   const [streak, setStreak] = useState(0);
   const [best, setBest] = useState(0);
-  const [tuku, setTuku] = useState(() => randomSpot());
-  const [decoys, setDecoys] = useState<Decoy[]>([]);
+  const [tukuHole, setTukuHole] = useState(0);
+  const [decoys, setDecoys] = useState<number[]>([]);
   const [hidden, setHidden] = useState(false);
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const [toast, setToast] = useState<string | null>(null);
@@ -54,12 +59,13 @@ function Game() {
   const [hopKey, setHopKey] = useState(0);
 
   const caughtRef = useRef(0);
+  const holeRef = useRef(0);
   const fid = useRef(0);
   const hopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const size = Math.max(30, 58 - caught * 1.4); // px, shrinks as you get better
-  const hopMs = Math.max(420, 1150 - caught * 55);
+  const size = Math.max(30, 56 - caught * 1.3); // shrinks as you get better
+  const hopMs = Math.max(400, 1100 - caught * 55);
 
   const addFloater = useCallback((x: number, y: number, text: string, good: boolean) => {
     const id = ++fid.current;
@@ -74,14 +80,22 @@ function Game() {
   }, []);
 
   const hop = useCallback(() => {
-    setTuku(randomSpot());
+    let next = holeRef.current;
+    while (next === holeRef.current && HOLES.length > 1) {
+      next = Math.floor(Math.random() * HOLES.length);
+    }
+    holeRef.current = next;
+    setTukuHole(next);
     setHopKey((k) => k + 1);
+
+    const others = HOLES.map((h) => h.id).filter((id) => id !== next);
     const n = 2 + Math.floor(Math.random() * 3);
-    setDecoys(Array.from({ length: n }, (_, i) => ({ id: i, ...randomSpot() })));
-    // occasional load-shedding blackout: Tuku briefly untouchable
+    setDecoys(others.sort(() => Math.random() - 0.5).slice(0, n));
+
+    // occasional load-shedding: Tuku is briefly untouchable
     if (Math.random() < 0.22) {
       setHidden(true);
-      setTimeout(() => setHidden(false), 260 + Math.random() * 260);
+      setTimeout(() => setHidden(false), 240 + Math.random() * 260);
     }
   }, []);
 
@@ -120,15 +134,29 @@ function Game() {
     setFloaters([]);
     setToast(null);
     setHidden(false);
-    setTuku(randomSpot());
+    holeRef.current = Math.floor(Math.random() * HOLES.length);
+    setTukuHole(holeRef.current);
     setDecoys([]);
     setPhase("playing");
     setHopKey((k) => k + 1);
   };
 
+  const registerMiss = (x: number, y: number) => {
+    setMissed((m) => m + 1);
+    setStreak(0);
+    addFloater(x, y, "মিস! ⚡", false);
+    showToast(pick(MISS_MESSAGES));
+    setShake((s) => s + 1);
+  };
+
   const onCatch = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (phase !== "playing" || hidden) return;
+    if (phase !== "playing") return;
+    const spot = HOLES[tukuHole]!;
+    if (hidden) {
+      registerMiss(spot.x, spot.y);
+      return;
+    }
     caughtRef.current += 1;
     setCaught(caughtRef.current);
     setStreak((s) => {
@@ -136,21 +164,20 @@ function Game() {
       setBest((b) => Math.max(b, ns));
       return ns;
     });
-    addFloater(tuku.x, tuku.y, CATCH_MESSAGES[Math.floor(Math.random() * CATCH_MESSAGES.length)]!, true);
+    addFloater(spot.x, spot.y, pick(CATCH_MESSAGES), true);
     hop();
   };
 
-  const onMiss = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onDecoy = (e: React.MouseEvent, x: number, y: number) => {
+    e.stopPropagation();
+    if (phase !== "playing") return;
+    registerMiss(x, y);
+  };
+
+  const onBoardMiss = (e: React.MouseEvent<HTMLDivElement>) => {
     if (phase !== "playing") return;
     const r = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    setMissed((m) => m + 1);
-    setStreak(0);
-    const msg = MISS_MESSAGES[Math.floor(Math.random() * MISS_MESSAGES.length)]!;
-    addFloater(x, y, "মিস! ⚡", false);
-    showToast(msg);
-    setShake((s) => s + 1);
+    registerMiss(((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100);
   };
 
   const taps = caught + missed;
@@ -163,9 +190,9 @@ function Game() {
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-8 pt-6">
         <header className="text-center">
           <p className="text-xs font-semibold tracking-widest text-accent">প্যারোডি গেম ⚡</p>
-          <h1 className="mt-1 text-3xl font-bold text-foreground">টুকু ধরো</h1>
+          <h1 className="mt-1 text-2xl font-bold leading-snug text-foreground">{TITLE}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            বিদ্যুৎ গেল কোথায়? টুকু জানে — ধরতে পারলে লাইন ফিরবে!
+            গর্ত থেকে উঁকি দেয়, চোখের পলকেই হাওয়া — ধরতে পারলে লাইন ফিরবে!
           </p>
         </header>
 
@@ -180,7 +207,7 @@ function Game() {
         {/* Map board */}
         <div
           key={shake}
-          onClick={onMiss}
+          onClick={onBoardMiss}
           className={`relative mt-4 aspect-[4/5] w-full select-none overflow-hidden rounded-3xl border border-border bg-card ${
             phase === "playing" ? "anim-shake cursor-crosshair" : ""
           }`}
@@ -196,19 +223,20 @@ function Game() {
             <path
               d={BD_PATH}
               fill="url(#bdFill)"
+              fillRule="evenodd"
               stroke="oklch(0.55 0.13 158)"
-              strokeWidth="0.8"
+              strokeWidth="0.5"
               strokeLinejoin="round"
             />
             {BD_CITIES.map((c) => (
               <g key={c.name}>
-                <circle cx={c.lon} cy={c.lat} r="0.9" fill="oklch(0.45 0.09 158)" opacity="0.6" />
+                <circle cx={c.lon} cy={c.lat} r="0.7" fill="oklch(0.45 0.09 158)" opacity="0.5" />
                 <text
-                  x={c.lon + 1.6}
-                  y={c.lat + 0.9}
-                  fontSize="2.6"
+                  x={c.lon + 1.4}
+                  y={c.lat + 0.8}
+                  fontSize="2.4"
                   fill="oklch(0.42 0.06 158)"
-                  opacity="0.75"
+                  opacity="0.7"
                 >
                   {c.name}
                 </text>
@@ -216,37 +244,61 @@ function Game() {
             ))}
           </svg>
 
+          {/* burrows */}
+          {HOLES.map((h) => (
+            <div
+              key={h.id}
+              className="pointer-events-none absolute"
+              style={{
+                left: `${h.x}%`,
+                top: `${h.y}%`,
+                width: 56,
+                height: 26,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <div className="hole-lip absolute inset-0 rounded-[50%]" />
+              <div className="hole-pit absolute inset-x-1 inset-y-[3px] rounded-[50%]" />
+            </div>
+          ))}
+
           {phase === "playing" && (
             <>
-              {decoys.map((d) => (
-                <button
-                  key={d.id}
-                  aria-label="নিভে যাওয়া বাল্ব"
-                  className="absolute grid place-items-center rounded-full border border-border bg-muted text-base opacity-70"
-                  style={{
-                    left: `${d.x}%`,
-                    top: `${d.y}%`,
-                    width: size * 0.8,
-                    height: size * 0.8,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  🕯️
-                </button>
-              ))}
+              {decoys.map((id) => {
+                const h = HOLES[id]!;
+                return (
+                  <button
+                    key={id}
+                    onClick={(e) => onDecoy(e, h.x, h.y)}
+                    aria-label="নিভে যাওয়া বাল্ব"
+                    className="anim-rise absolute grid place-items-center rounded-full border border-border bg-muted opacity-80"
+                    style={{
+                      left: `${h.x}%`,
+                      top: `${h.y}%`,
+                      width: size * 0.78,
+                      height: size * 0.78,
+                      transform: "translate(-50%, -62%)",
+                      fontSize: size * 0.38,
+                    }}
+                  >
+                    🕯️
+                  </button>
+                );
+              })}
 
               <button
+                key={`tuku-${hopKey}`}
                 onClick={onCatch}
                 aria-label="টুকু ধরুন"
-                className={`tuku-spark anim-pop absolute grid place-items-center rounded-full ${
+                className={`tuku-spark anim-rise absolute grid place-items-center rounded-full ${
                   hidden ? "opacity-20" : "anim-flicker"
                 }`}
                 style={{
-                  left: `${tuku.x}%`,
-                  top: `${tuku.y}%`,
+                  left: `${HOLES[tukuHole]!.x}%`,
+                  top: `${HOLES[tukuHole]!.y}%`,
                   width: size,
                   height: size,
-                  transform: "translate(-50%, -50%)",
+                  transform: "translate(-50%, -62%)",
                   fontSize: size * 0.5,
                 }}
               >
@@ -271,7 +323,7 @@ function Game() {
             <Overlay>
               <h2 className="text-xl font-bold text-foreground">সময় বেছে নিন</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                টুকু খুব দ্রুত লাফায়, ধরা সহজ না!
+                মানচিত্রের গর্ত থেকে টুকু উঁকি দেবে — ধরা কিন্তু সহজ না!
               </p>
               <div className="mt-4 grid w-full gap-2">
                 {DURATIONS.map((d) => (
