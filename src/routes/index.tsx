@@ -40,8 +40,8 @@ function label(sec: number) {
 
 // The SVG (viewBox -7..107) renders as a centred square inside the 4:5 board,
 // so overlay coordinates need the same mapping.
-const VB_MIN = -7;
-const VB_SIZE = 114;
+const VB_MIN = -3;
+const VB_SIZE = 106;
 const mapX = (x: number) => ((x - VB_MIN) / VB_SIZE) * 100;
 const mapY = (y: number) => 10 + ((y - VB_MIN) / VB_SIZE) * 80;
 
@@ -220,7 +220,7 @@ function Game() {
           }`}
           style={{ boxShadow: "var(--shadow-card)" }}
         >
-          <svg viewBox="-7 -7 114 114" className="map-glow absolute inset-0 h-full w-full">
+          <svg viewBox="-3 -3 106 106" className="map-glow absolute inset-0 h-full w-full">
             <defs>
               <linearGradient id="bdFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="oklch(0.93 0.06 150)" />
