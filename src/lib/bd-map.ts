@@ -76,11 +76,11 @@ export const HOLES: Hole[] = (() => {
   const candidates: Array<{ x: number; y: number }> = [];
   for (let y = 8; y <= 92; y += 2) {
     for (let x = 6; x <= 94; x += 2) {
-      if (fits(x, y, 6)) candidates.push({ x, y });
+      if (fits(x, y, 8.5)) candidates.push({ x, y });
     }
   }
   const picked: Array<{ x: number; y: number }> = [];
-  const minDist = 17;
+  const minDist = 19;
   // Greedy farthest-point spread for an even board.
   const start = candidates.reduce((a, b) => (b.y < a.y ? b : a), candidates[0] ?? { x: 50, y: 50 });
   picked.push(start);

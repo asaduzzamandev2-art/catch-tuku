@@ -252,8 +252,8 @@ function Game() {
               style={{
                 left: `${h.x}%`,
                 top: `${h.y}%`,
-                width: 56,
-                height: 26,
+                width: 46,
+                height: 21,
                 transform: "translate(-50%, -50%)",
               }}
             >
