@@ -38,7 +38,7 @@ function label(sec: number) {
   return "২ মিনিট";
 }
 
-// The SVG (viewBox -7..107) renders as a centred square inside the 4:5 board,
+// The SVG (viewBox -3..103) renders as a centred square inside the 4:5 board,
 // so overlay coordinates need the same mapping.
 const VB_MIN = -3;
 const VB_SIZE = 106;
