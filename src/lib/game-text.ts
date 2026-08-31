@@ -22,7 +22,7 @@ export const CATCH_MESSAGES = [
 
 export function toBn(n: number | string): string {
   const d = "০১২৩৪৫৬৭৮৯";
-  return String(n).replace(/[0-9]/g, (c) => d[Number(c)]);
+  return String(n).replace(/[0-9]/g, (c) => d[Number(c)]!);
 }
 
 export function rank(caught: number, accuracy: number) {

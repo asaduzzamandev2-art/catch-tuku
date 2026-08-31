@@ -50,8 +50,8 @@ export const BD_PATH =
 export function insideBD(x: number, y: number): boolean {
   let inside = false;
   for (let i = 0, j = BD_POINTS.length - 1; i < BD_POINTS.length; j = i++) {
-    const [xi, yi] = BD_POINTS[i];
-    const [xj, yj] = BD_POINTS[j];
+    const [xi, yi] = BD_POINTS[i]!;
+    const [xj, yj] = BD_POINTS[j]!;
     if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;

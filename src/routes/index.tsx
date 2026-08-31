@@ -136,7 +136,7 @@ function Game() {
       setBest((b) => Math.max(b, ns));
       return ns;
     });
-    addFloater(tuku.x, tuku.y, CATCH_MESSAGES[Math.floor(Math.random() * CATCH_MESSAGES.length)], true);
+    addFloater(tuku.x, tuku.y, CATCH_MESSAGES[Math.floor(Math.random() * CATCH_MESSAGES.length)]!, true);
     hop();
   };
 
@@ -147,7 +147,7 @@ function Game() {
     const y = ((e.clientY - r.top) / r.height) * 100;
     setMissed((m) => m + 1);
     setStreak(0);
-    const msg = MISS_MESSAGES[Math.floor(Math.random() * MISS_MESSAGES.length)];
+    const msg = MISS_MESSAGES[Math.floor(Math.random() * MISS_MESSAGES.length)]!;
     addFloater(x, y, "মিস! ⚡", false);
     showToast(msg);
     setShake((s) => s + 1);
