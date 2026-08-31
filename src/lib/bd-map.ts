@@ -1,46 +1,63 @@
 // Simplified Bangladesh outline in lon/lat, converted to a 0..100 viewBox space.
 const LONLAT: Array<[number, number]> = [
-  [88.0, 26.35],
-  [88.7, 26.3],
-  [89.0, 26.0],
-  [89.8, 26.05],
-  [89.9, 25.3],
-  [90.5, 25.2],
-  [91.0, 25.2],
-  [92.1, 25.2],
-  [92.5, 24.9],
-  [92.2, 24.4],
-  [91.4, 24.1],
-  [91.6, 23.6],
-  [92.3, 23.7],
-  [92.6, 22.9],
-  [92.3, 22.0],
-  [92.6, 21.3],
-  [92.0, 21.5],
-  [91.8, 22.4],
-  [91.3, 22.2],
-  [90.6, 22.3],
-  [90.0, 21.8],
+  [88.35, 26.6],
+  [88.9, 26.4],
+  [88.75, 26.0],
+  [89.0, 25.9],
+  [89.35, 26.05],
+  [89.85, 26.2],
+  [89.85, 25.35],
+  [89.6, 25.15],
+  [90.0, 25.15],
+  [90.6, 25.15],
+  [91.2, 25.2],
+  [92.0, 25.15],
+  [92.4, 24.9],
+  [92.15, 24.4],
+  [91.6, 24.2],
+  [91.4, 23.9],
+  [91.75, 23.7],
+  [91.4, 23.2],
+  [91.95, 23.0],
+  [92.35, 22.5],
+  [92.6, 21.9],
+  [92.25, 21.4],
+  [92.0, 21.6],
+  [91.85, 22.1],
+  [91.4, 22.4],
+  [90.9, 22.2],
+  [90.6, 21.9],
+  [90.2, 21.9],
+  [89.9, 22.3],
+  [89.6, 21.75],
   [89.1, 21.9],
-  [88.9, 22.6],
-  [88.9, 23.2],
-  [89.8, 23.9],
-  [89.7, 24.2],
-  [88.7, 24.2],
-  [88.1, 24.9],
-  [88.9, 25.3],
-  [88.4, 25.6],
-  [88.7, 26.0],
+  [88.9, 22.4],
+  [88.7, 23.0],
+  [88.75, 23.5],
+  [88.55, 23.65],
+  [88.8, 24.0],
+  [88.05, 24.35],
+  [88.15, 24.9],
+  [88.75, 25.25],
+  [88.35, 25.5],
+  [88.6, 25.85],
 ];
 
 const LON_MIN = 87.8;
 const LON_MAX = 93.0;
-const LAT_MIN = 20.9;
+const LAT_MIN = 21.0;
 const LAT_MAX = 26.9;
 
+// Keep real-world proportions: longitude degrees are shorter at ~24N.
+const X_SCALE = 0.62;
+const X_OFFSET = (100 - 100 * X_SCALE) / 2;
+
+const projX = (lon: number) => X_OFFSET + ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * 100 * X_SCALE;
+const projY = (lat: number) => ((LAT_MAX - lat) / (LAT_MAX - LAT_MIN)) * 100;
+
 export const BD_POINTS: Array<[number, number]> = LONLAT.map(([lon, lat]) => [
-  ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * 100,
-  ((LAT_MAX - lat) / (LAT_MAX - LAT_MIN)) * 100,
+  projX(lon),
+  projY(lat),
 ]);
 
 export const BD_PATH =
@@ -60,14 +77,14 @@ export function insideBD(x: number, y: number): boolean {
 /** Random point comfortably inside the map (percent coords). */
 export function randomSpot(): { x: number; y: number } {
   for (let i = 0; i < 400; i++) {
-    const x = 6 + Math.random() * 88;
+    const x = 4 + Math.random() * 92;
     const y = 6 + Math.random() * 88;
     if (
       insideBD(x, y) &&
-      insideBD(x + 3, y) &&
-      insideBD(x - 3, y) &&
-      insideBD(x, y + 3) &&
-      insideBD(x, y - 3)
+      insideBD(x + 2.5, y) &&
+      insideBD(x - 2.5, y) &&
+      insideBD(x, y + 2.5) &&
+      insideBD(x, y - 2.5)
     ) {
       return { x, y };
     }
@@ -84,8 +101,4 @@ export const BD_CITIES: Array<{ name: string; lon: number; lat: number }> = [
   { name: "রংপুর", lon: 89.25, lat: 25.75 },
   { name: "বরিশাল", lon: 90.37, lat: 22.7 },
   { name: "ময়মনসিংহ", lon: 90.4, lat: 24.75 },
-].map((c) => ({
-  ...c,
-  lon: ((c.lon - LON_MIN) / (LON_MAX - LON_MIN)) * 100,
-  lat: ((LAT_MAX - c.lat) / (LAT_MAX - LAT_MIN)) * 100,
-}));
+].map((c) => ({ ...c, lon: projX(c.lon), lat: projY(c.lat) }));
